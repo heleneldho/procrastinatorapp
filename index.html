@@ -177,8 +177,102 @@
       box-shadow: 0 0 20px rgba(21, 0, 9, 0.8);
     }
 
+  #giveUpBtn {
+    z-index: 9999;
+    box-shadow: 0 0 20px 20px rgba(21, 0, 9, 0.8);
+  }
+  #giveUpBtn:hover { transform: translateX(-50%) scale(1.1); }
+  #giveUpBtn:active { transform: translateX(-50%) scale(0.95); }
+
+  #petContainer {
+  position: relative;
+  margin-top: 10px;
+  margin-bottom: -10px;
+  text-align: center;
+}
+
+#petImage {
+  width: 80px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+#petMood {
+  font-size: 14px;
+  color: #ccc;
+  margin-top: 5px;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes droop {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(5deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.pet-happy {
+  animation: bounce 1s infinite;
+}
+
+.pet-sad {
+  animation: droop 1s infinite;
+}
+
+.pet-chaotic {
+  animation: shake 0.5s infinite;
+}
+
+.pet-neutral {
+  animation: none;
+}
+
+.pet-happy {
+  animation: bounce 1s infinite;
+}
+
+.pet-sad {
+  animation: droop 1s infinite;
+}
     #giveUpBtn:hover { transform: translateX(-50%) scale(1.1); }
     #giveUpBtn:active { transform: translateX(-50%) scale(0.95); }
+.speech-bubble {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  animation: fadeInOut 3s ease-in-out;
+  z-index: 10;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  10% { opacity: 1; transform: translateX(-50%) scale(1); }
+  90% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+}
+
+.hidden {
+  display: none;
+}
+#petImage:hover {
+  transform: scale(1.1);
+}
   </style>
 </head>
 <body>
@@ -189,13 +283,20 @@
   <div id="compliment-popup">You're amazing!</div>
   <div id="emoji-container"></div>
   <button id="giveUpBtn">Give Up & Be Productive</button>
+ <!-- 🐸 Pet near progress bar -->
+<div id="petContainer" style="position: relative;">
+  <img id="petImage" src="pet-neutral.png" alt="Pet" />
+  <p id="petMood">Mood: Neutral</p>
+  <div id="petSpeechBubble" class="speech-bubble hidden"></div>
+</div>
+
+<div id="progress-bar"></div>
+<p id="mode">Focused</p>
 
   <audio id="ding-sound" src="ding.mp3" preload="auto"></audio>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-  let lastTrapTime = 0;
-  let trapActive = true;
   let trapChaosActive = true;
   let lastActivity = Date.now();
   let procrastinationPercent = 0;
@@ -278,33 +379,21 @@ function updateBar() {
     }
   }
 
-  // 💥 Trap trigger logic
-  if (procrastinationPercent >= 100) {
-  const now = Date.now();
-  if (now - lastTrapTime > 3000) { // 3-second cooldown
+  if (procrastinationPercent >= 100 && document.getElementsByClassName('trapBox').length === 0) {
     createTrapBox();
-    lastTrapTime = now;
   }
-}
-
-  // 🌀 Reset for next cycle
- 
 
   setTimeout(updateBar, 1000);
 }
 
 
   function switchToWorkingMode() {
-  isWorking = true;
-  trapTriggered = false;
-
-  progressBar.style.background = "limegreen";
-  progressBar.style.width = procrastinationPercent + "%"; // ✅ ensure width is set
-
-  statusText.textContent = "Focused 🧠";
-  messageArea.textContent = "";
-  startComplimentLoop();
-}
+    isWorking = true;
+    progressBar.style.background = "limegreen";
+    statusText.textContent = "Focused 🧠";
+    messageArea.textContent = "";
+    startComplimentLoop();
+  }
 
   function switchToProcrastinationMode() {
     isWorking = false;
@@ -343,7 +432,7 @@ function updateBar() {
     const emoji = document.createElement("div");
     emoji.className = "floating-emoji";
     emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    emoji.style.fontSize = `${Math.random() * 20 + 24}px`;
+    emoji.style.fontSize =` ${Math.random() * 20 + 24}px`;
     emoji.style.left = `${Math.random() * 100}%`;
     emoji.style.top = `${window.innerHeight}px`;
     document.getElementById("emoji-container").appendChild(emoji);
@@ -351,49 +440,48 @@ function updateBar() {
   }
 
   function createTrapBox() {
-  if (!trapActive || boxCount >= MAX_BOXES) return;
+    if (!trapChaosActive || boxCount >= MAX_BOXES) return;
 
-  const box = document.createElement("div");
-  box.classList.add("trapBox");
+    const box = document.createElement("div");
+    box.classList.add("trapBox");
 
-  const closeBtn = document.createElement("button");
-  closeBtn.classList.add("closeBtn");
-  closeBtn.innerText = "X";
-  closeBtn.onclick = () => {
-    box.remove();
-    boxCount--;
-  };
+    const closeBtn = document.createElement("button");
+    closeBtn.classList.add("closeBtn");
+    closeBtn.innerText = "X";
 
-  const emoji = document.createElement("div");
-  emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-  emoji.style.fontSize = "32px";
-  emoji.style.marginBottom = "8px";
+    const emoji = document.createElement("div");
+    emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    emoji.style.fontSize = "32px";
+    emoji.style.marginBottom = "8px";
 
-  const msg = document.createElement("h3");
-  msg.innerText = messages[Math.floor(Math.random() * messages.length)];
+    const msg = document.createElement("h3");
+    msg.innerText = messages[Math.floor(Math.random() * messages.length)];
 
-  box.appendChild(closeBtn);
-  box.appendChild(emoji);
-  box.appendChild(msg);
-  box.style.left = `${Math.random() * (window.innerWidth - 200)}px`;
-  box.style.top = `${Math.random() * (window.innerHeight - 200)}px`;
-  document.body.appendChild(box);
-  boxCount++;
+    box.appendChild(closeBtn);
+    box.appendChild(emoji);
+    box.appendChild(msg);
+    box.style.left =` ${Math.random() * (window.innerWidth - 200)}px`;
+    box.style.top = `${Math.random() * (window.innerHeight - 200)}px`;
+    document.body.appendChild(box);
+    boxCount++;
 
-  setTimeout(() => {
-    if (trapActive) createTrapBox();
-  }, 500);
-}
+    closeBtn.onclick = () => {
+      box.remove();
+      boxCount--;
+    };
 
+    setTimeout(() => {
+      if (trapChaosActive) createTrapBox();
+    }, 500);
+  }
 
   function clearAllTrapBoxes() {
     const boxes = document.querySelectorAll('.trapBox');
     boxes.forEach(box => box.remove());
     boxCount = 0;
   }
-document.getElementById("giveUpBtn").onclick = () => {
-  document.getElementById("pledgeModal").style.display = "block";
-};
+
+  document.getElementById("giveUpBtn").onclick = () => {
     const pledge = prompt("Type this to escape the chaos: I will stop procrastinating now.");
     if (pledge && pledge.toLowerCase().includes("i will stop procrastinating")) {
       alert("You are free... for now.");
@@ -407,7 +495,7 @@ document.getElementById("giveUpBtn").onclick = () => {
       alert("Wrong. Try again.");
       for (let i = 0; i < 5; i++) createTrapBox();
     }
-  
+  };
 
   function launchConfetti() {
     confetti({
@@ -416,48 +504,97 @@ document.getElementById("giveUpBtn").onclick = () => {
       origin: { y: 0.6 }
     });
   }
+  
+  // Existing variables...
+  let petHappiness = 50; // 0 = sad, 100 = ecstatic
 
+  const petImage = document.getElementById("petImage");
+  const petMood = document.getElementById("petMood");
+
+  function updatePetMood() {
+    if (petHappiness >= 80) {
+      petImage.src = "pet-happy.png";
+      petMood.innerText = "Mood: Ecstatic 🥳";
+    } else if (petHappiness >= 50) {
+      petImage.src = "pet-neutral.png";
+      petMood.innerText = "Mood: Content 🙂";
+    } else {
+      petImage.src = "pet-sad.png";
+      petMood.innerText = "Mood: Sad 😢";
+    }
+  }
+
+  function updateProgressBar() {
+    // Example logic — adapt to your actual flow
+    if (isWorking) {
+      procrastinationPercent -= 1;
+      petHappiness -= 1;
+    } else {
+      procrastinationPercent += 2;
+      petHappiness += 2;
+    }
+
+    // Clamp values
+    procrastinationPercent = Math.max(0, Math.min(100, procrastinationPercent));
+    petHappiness = Math.max(0, Math.min(100, petHappiness));
+
+    progressBar.style.width = `${procrastinationPercent}%`;
+    statusText.innerText = isWorking ? "Focused" : "Procrastinating";
+
+    updatePetMood();
+  }
+
+  setInterval(updateProgressBar, 1000);
+
+  document.getElementById("giveUpBtn").addEventListener("click", () => {
+    isWorking = true;
+    petHappiness = 40;
+    updatePetMood();
+  });
+  function updatePetMood() {
+  const petImg = document.getElementById("petImage");
+  petImg.className = ""; // Reset previous animation
+
+  if (petHappiness >= 80) {
+    petImg.src = "pet-happy.png";
+    petMood.innerText = "Mood: Ecstatic 🥳";
+    petImg.classList.add("pet-happy");
+  } else if (petHappiness >= 50) {
+    petImg.src = "pet-neutral.png";
+    petMood.innerText = "Mood: Content 🙂";
+    petImg.classList.add("pet-neutral");
+  } else if (petHappiness >= 20) {
+    petImg.src = "pet-sad.png";
+    petMood.innerText = "Mood: Sad 😢";
+    petImg.classList.add("pet-sad");
+  } else {
+    petImg.src = "pet-chaotic.png";
+    petMood.innerText = "Mood: Unhinged 🤪";
+    petImg.classList.add("pet-chaotic");
+  }
+}
+function petSay(message) {
+  const bubble = document.getElementById("petSpeechBubble");
+  bubble.innerText = message;
+  bubble.classList.remove("hidden");
+
+  // Reset animation
+  bubble.style.animation = "none";
+  bubble.offsetHeight; // Trigger reflow
+  bubble.style.animation = null;
+
+  // Hide after animation
+  setTimeout(() => {
+    bubble.classList.add("hidden");
+  }, 3000);
+}
+document.getElementById("petImage").addEventListener("click", () => {
+  petSay("heyyy feed meee");
+});
+console.log(document.getElementById("petSpeechBubble"));
   // Start loop
-  switchToWorkingMode(); 
   updateBar();
   startComplimentLoop();
 </script>
-<!-- Pledge Modal -->
-<div id="pledgeModal" style="display: none;">
-  <div style="
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #1e1e2f;
-    color: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-    z-index: 99999;
-    font-family: 'Orbitron', sans-serif;
-    width: 300px;
-    text-align: center;
-  ">
-    <h3>Make Your Pledge</h3>
-    <p>Type exactly:<br><strong>I will stop procrastinating now.</strong></p>
-    <input id="pledgeInput" type="text" style="
-      width: 100%;
-      padding: 8px;
-      font-size: 14px;
-      margin-top: 10px;
-    " />
-    <br /><br />
-    <button id="pledgeSubmitBtn" style="
-      padding: 10px 20px;
-      background: limegreen;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    ">Submit</button>
-  </div>
-</div>
-
 </body>
 </html>
