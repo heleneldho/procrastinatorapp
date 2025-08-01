@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>😈 Procrastinator's Hell</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #53354a);
+      background-size: 400% 400%;
+      animation: bgMove 20s ease infinite;
+      overflow: hidden;
+      font-family: 'Roboto', sans-serif;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      transition: background 1s ease;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.8em;
+      margin-bottom: 10px;
+      animation: bounce 2s infinite;
+      color: #ff3c00;
+      text-shadow: 0 0 10px #ff3c00;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    #progress-bar-container {
+      width: 80%;
+      height: 25px;
+      margin: 20px auto;
+      background: #444;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 10px #222;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: limegreen;
+      transition: width 0.5s ease-in-out;
+      animation: glow 2s infinite ease-in-out;
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 10px limegreen; }
+      50% { box-shadow: 0 0 20px limegreen; }
+    }
+
+    #status { font-size: 1.2em; margin-bottom: 10px; }
+    #message-area { margin-top: 20px; font-size: 1.1em; color: #ff7777; min-height: 30px; }
+    #compliment-popup {
+      position: fixed;
+      bottom: -100px;
+      right: 30px;
+      background: #00ff88;
+      color: black;
+      padding: 15px 20px;
+      border-radius: 12px;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00ff88;
+      opacity: 0;
+      transition: all 0.5s ease;
+      z-index: 1000;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    #compliment-popup.show {
+      bottom: 30px;
+      opacity: 1;
+    }
+
+    #emoji-container {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .floating-emoji {
+      position: absolute;
+      font-size: 24px;
+      animation: floatUp 3s linear forwards;
+      opacity: 0.8;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-200px); opacity: 0; }
+    }
+
+    .trapBox {
+      position: absolute;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      border: 2px dashed #343333;
+      color: #fff;
+      width: 200px;
+      height: 200px;
+      padding: 16px;
+      box-sizing: border-box;
+      text-align: center;
+      z-index: 10;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(100, 90, 87, 0.8);
+      font-family: 'Comic Sans MS', 'Courier New', cursive;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      animation: pulse 1.2s infinite;
+      transition: all 0.3s ease;
+    }
+
+    .trapBox button {
+      background-color: #442a22;
+      border: none;
+      color: white;
+      font-weight: bold;
+      padding: 6px 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+
+    .trapBox button:hover {
+      transform: scale(1.1);
+      background-color: #211410;
+    }
+
+    .closeBtn {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background: rgb(44, 0, 0);
+      color: white;
+      border: none;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    #giveUpBtn {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, #f3c966, #844e04);
+      color: black;
+      padding: 15px 40px;
+      font-size: 18px;
+      border: none;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      box-shadow: 0 0 20px rgba(21, 0, 9, 0.8);
+    }
+
+    #giveUpBtn:hover { transform: translateX(-50%) scale(1.1); }
+    #giveUpBtn:active { transform: translateX(-50%) scale(0.95); }
+  </style>
+</head>
+<body>
+  <h1>😈 Procrastinator’s Hell</h1>
+  <p id="status">Status: <span id="mode">Detecting...</span></p>
+  <div id="progress-bar-container"><div id="progress-bar"></div></div>
+  <div id="message-area"></div>
+  <div id="compliment-popup">You're amazing!</div>
+  <div id="emoji-container"></div>
+  <button id="giveUpBtn">Give Up & Be Productive</button>
+
+  <audio id="ding-sound" src="ding.mp3" preload="auto"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+  let lastTrapTime = 0;
+  let trapActive = true;
+  let trapChaosActive = true;
+  let lastActivity = Date.now();
+  let procrastinationPercent = 0;
+  let isWorking = true;
+  let focusStreak = 0;
+  let confettiGiven = false;
+  let complimentTimer = null;
+  let boxCount = 0;
+  const MAX_BOXES = 50;
+
+  const progressBar = document.getElementById('progress-bar');
+  const statusText = document.getElementById('mode');
+  const messageArea = document.getElementById('message-area');
+  const complimentPopup = document.getElementById('compliment-popup');
+  const dingSound = document.getElementById('ding-sound');
+
+  const compliments = [
+    "You're smashing this task harder than Java smashes memory.",
+    "You’re not just working. You’re dominating.",
+    "You're focus goals right now.",
+    "Even your code is proud of you.",
+    "The grind is real and so are your skills.",
+    "Productivity looks good on you.",
+    "You versus distractions? You're winning."
+  ];
+  const chaosQuotes = [
+    "Did you really finish that assignment?",
+    "Your crush saw your screen. She’s judging.",
+    "Elon Musk just launched another rocket. You just launched Instagram.",
+    "If AI replaces you, will anyone notice?",
+    "You opened YouTube again, didn't you?",
+    "Your professor knows. Trust me."
+  ];
+  const messages = [
+    "Still trying to leave?",
+    "You clicked close again?!",
+    "That made it worse.",
+    "Your screen is mine now.",
+    "Oops... more boxes!",
+    "Should’ve stayed focused.",
+    "You brought this on yourself.",
+    "Click = Multiply. Good luck.",
+    "Regret is real, huh?",
+    "The only way out is work."
+  ];
+  const emojis = ["😈", "🤡", "👀", "🔥", "💀", "🙃", "🧠", "📦", "🕳", "🚫"];
+
+  window.onmousemove = resetTimer;
+  window.onkeydown = resetTimer;
+
+  function resetTimer() {
+  if (!trapChaosActive) {
+    lastActivity = Date.now();
+    if (!isWorking) switchToWorkingMode();
+  }
+}
+
+function updateBar() {
+  const now = Date.now();
+  const inactiveTime = (now - lastActivity) / 1000;
+
+  if (inactiveTime > 2) {
+    procrastinationPercent = Math.min(100, procrastinationPercent + 10);
+    progressBar.style.width = procrastinationPercent + "%";
+    if (isWorking) switchToProcrastinationMode();
+  } else {
+    if (!trapChaosActive) {
+      if (procrastinationPercent > 0) {
+        procrastinationPercent = Math.max(0, procrastinationPercent - 5);
+        progressBar.style.width = procrastinationPercent + "%";
+      }
+
+      if (isWorking) {
+        focusStreak += 2;
+        if (focusStreak >= 30 && !confettiGiven) {
+          launchConfetti();
+          confettiGiven = true;
+        }
+      }
+    }
+  }
+
+  // 💥 Trap trigger logic
+  if (procrastinationPercent >= 100) {
+  const now = Date.now();
+  if (now - lastTrapTime > 3000) { // 3-second cooldown
+    createTrapBox();
+    lastTrapTime = now;
+  }
+}
+
+  // 🌀 Reset for next cycle
+ 
+
+  setTimeout(updateBar, 1000);
+}
+
+
+  function switchToWorkingMode() {
+  isWorking = true;
+  trapTriggered = false;
+
+  progressBar.style.background = "limegreen";
+  progressBar.style.width = procrastinationPercent + "%"; // ✅ ensure width is set
+
+  statusText.textContent = "Focused 🧠";
+  messageArea.textContent = "";
+  startComplimentLoop();
+}
+
+  function switchToProcrastinationMode() {
+    isWorking = false;
+    progressBar.style.background = "red";
+    statusText.textContent = "Procrastinating 😩";
+    messageArea.textContent = chaosQuotes[Math.floor(Math.random() * chaosQuotes.length)];
+    stopComplimentLoop();
+    focusStreak = 0;
+    confettiGiven = false;
+  }
+
+  function startComplimentLoop() {
+    if (complimentTimer) clearInterval(complimentTimer);
+    complimentTimer = setInterval(() => {
+      if (isWorking) {
+        showComplimentPopup();
+        spawnFloatingEmoji();
+      }
+    }, 5000);
+  }
+
+  function stopComplimentLoop() {
+    clearInterval(complimentTimer);
+  }
+
+  function showComplimentPopup() {
+    const msg = compliments[Math.floor(Math.random() * compliments.length)];
+    complimentPopup.textContent = msg;
+    dingSound.currentTime = 0;
+    dingSound.play();
+    complimentPopup.classList.add('show');
+    setTimeout(() => complimentPopup.classList.remove('show'), 4000);
+  }
+
+  function spawnFloatingEmoji() {
+    const emoji = document.createElement("div");
+    emoji.className = "floating-emoji";
+    emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    emoji.style.fontSize = `${Math.random() * 20 + 24}px`;
+    emoji.style.left = `${Math.random() * 100}%`;
+    emoji.style.top = `${window.innerHeight}px`;
+    document.getElementById("emoji-container").appendChild(emoji);
+    setTimeout(() => emoji.remove(), 3000);
+  }
+
+  function createTrapBox() {
+  if (!trapActive || boxCount >= MAX_BOXES) return;
+
+  const box = document.createElement("div");
+  box.classList.add("trapBox");
+
+  const closeBtn = document.createElement("button");
+  closeBtn.classList.add("closeBtn");
+  closeBtn.innerText = "X";
+  closeBtn.onclick = () => {
+    box.remove();
+    boxCount--;
+  };
+
+  const emoji = document.createElement("div");
+  emoji.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+  emoji.style.fontSize = "32px";
+  emoji.style.marginBottom = "8px";
+
+  const msg = document.createElement("h3");
+  msg.innerText = messages[Math.floor(Math.random() * messages.length)];
+
+  box.appendChild(closeBtn);
+  box.appendChild(emoji);
+  box.appendChild(msg);
+  box.style.left = `${Math.random() * (window.innerWidth - 200)}px`;
+  box.style.top = `${Math.random() * (window.innerHeight - 200)}px`;
+  document.body.appendChild(box);
+  boxCount++;
+
+  setTimeout(() => {
+    if (trapActive) createTrapBox();
+  }, 500);
+}
+
+
+  function clearAllTrapBoxes() {
+    const boxes = document.querySelectorAll('.trapBox');
+    boxes.forEach(box => box.remove());
+    boxCount = 0;
+  }
+document.getElementById("giveUpBtn").onclick = () => {
+  document.getElementById("pledgeModal").style.display = "block";
+};
+    const pledge = prompt("Type this to escape the chaos: I will stop procrastinating now.");
+    if (pledge && pledge.toLowerCase().includes("i will stop procrastinating")) {
+      alert("You are free... for now.");
+      trapChaosActive = false;
+      clearAllTrapBoxes();
+      isWorking = true;
+      procrastinationPercent = 0;
+      progressBar.style.width = "0%";
+      switchToWorkingMode();
+    } else {
+      alert("Wrong. Try again.");
+      for (let i = 0; i < 5; i++) createTrapBox();
+    }
+  
+
+  function launchConfetti() {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }
+
+  // Start loop
+  switchToWorkingMode(); 
+  updateBar();
+  startComplimentLoop();
+</script>
+<!-- Pledge Modal -->
+<div id="pledgeModal" style="display: none;">
+  <div style="
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1e1e2f;
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    z-index: 99999;
+    font-family: 'Orbitron', sans-serif;
+    width: 300px;
+    text-align: center;
+  ">
+    <h3>Make Your Pledge</h3>
+    <p>Type exactly:<br><strong>I will stop procrastinating now.</strong></p>
+    <input id="pledgeInput" type="text" style="
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      margin-top: 10px;
+    " />
+    <br /><br />
+    <button id="pledgeSubmitBtn" style="
+      padding: 10px 20px;
+      background: limegreen;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    ">Submit</button>
+  </div>
+</div>
+
+</body>
+</html>
